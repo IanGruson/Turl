@@ -88,16 +88,17 @@ pub fn create_workspace(
 pub fn create_collection(
     name : String,
     workspace_id : i32,
-    db : &Database) { 
+    db : &Database) -> Result<()> { 
 
     println!("creating new collection");
     //This methods works and is not vulnerable to SQL injections because of the vec! I think.
     //Also doesn't work without a cursor and I don't get why.
-    let mut statement = db.connection.prepare("INSERT INTO Collection(name, id_workspace) VALUES (:name, :id_workspace);").unwrap();
+    let mut statement = db.connection.prepare("INSERT INTO Collection(name, id_workspace) VALUES (:name, :id_workspace);")?;
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
     (":id_workspace", Value::Integer(workspace_id.into()))
-    ]);
-    cursor.next();
+    ])?;
+    cursor.next()?;
+    Ok(())
 
 }
