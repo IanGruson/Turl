@@ -1,7 +1,7 @@
 use std::{error::Error, io};
 
 mod util;
-mod sidebar;
+mod database;
 
 use util::event::{Event, Events};
 use util::dbhandler::Database;
@@ -12,7 +12,7 @@ use tui::backend::TermionBackend;
 use tui::widgets::{Widget, Block, Borders};
 use tui::layout::{Layout, Constraint, Direction};
 
-use sidebar::collection;
+use database::container;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;
@@ -20,10 +20,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let events = Events::new();
+
     let db = &Database {
         filename : String::from("./.database"),
         connection : sqlite::open("./.database").unwrap(),
     };
+
+    let user = &database::user::get_user(1, db).unwrap().unwrap();
+    println!("the user id is : {}", user.id);
+
 
     terminal.clear()?;
     loop {
@@ -32,10 +37,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Event::Input(input) = events.next()? {
             match input {
                 Key::Char('w') => {
-                    collection::create_workspace("Workspace nb 1", db);
+                    container::create_workspace(user, "test", db)?;
                 }
                 Key::Char('i') => {
-                    collection::create_collection(String::from("test"), db);
+                    // container::create_collection(String::from("test"), db);
                 }
                 Key::Char('q') => {
                     break;
