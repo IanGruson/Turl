@@ -16,29 +16,29 @@ enum Methods {
     MODIFY,
 }
 
-pub struct Workspace<'a> {
+pub struct Workspace {
 
-    name : &'a str,
+    name : String,
     collections : Vec<Collection>, 
 }
 
 pub struct Collection {
-    name : &'static str,
+    name : String,
     queries : Vec<HttpQuery>,
 }
 
-pub trait Container<'a> {
+pub trait Container {
 
-    fn new(name : &'a str) -> Self;
-    fn name(&self) -> &'a str;
+    fn new(name : String) -> Self;
+    fn name(&self) -> String;
 }
 
-impl <'a>Container<'a> for Workspace<'a> {
-    fn new(name : &'a str) -> Workspace {
+impl Container for Workspace {
+    fn new(name : String) -> Workspace {
         Workspace {name : name, collections : vec![]}
     }
 
-    fn name(&self) -> &'a str {
+    fn name(&self) -> String {
         self.name
     }
 }
@@ -140,7 +140,7 @@ pub fn get_all_workspaces(
     cursor.bind_by_name(vec![(":user_id", Value::Integer(user_id.into()))])?;
     while let Some(row) = cursor.next().unwrap() {
         let workspace = Workspace {
-            name : row[0].as_string().unwrap(),
+            name : row[0].as_string().unwrap().to_owned(),
             collections : vec![],
         };
         workspaces.push(workspace);
