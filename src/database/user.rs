@@ -24,21 +24,6 @@ pub fn get_user(
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":user_id", Value::Integer(user_id.into()))])?;
 
-
-    // if let Some(row) = cursor.next().unwrap() {
-
-    //     let user = User {
-    //         id : row[0].as_integer().unwrap().to_owned(),
-    //         name : row[1].as_string().unwrap().to_owned(),
-    //         email : row[2].as_string().unwrap().to_owned(),
-
-    //     };
-    //     Ok(Some(user))
-    // }
-    // else {
-    //     Err(e)
-    // }
-    //
     match cursor.next().unwrap() {
         Some(row) => {
             let user = User {

@@ -11,7 +11,7 @@ use tui::{
     Terminal,
     backend::TermionBackend,
     widgets::{Widget, Block, Borders, Paragraph},
-    layout::{Layout, Constraint, Direction},
+    layout::{Layout, Constraint, Direction, Rect},
     style::{Color, Modifier, Style},
 };
 
@@ -69,41 +69,49 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         //render UI
         terminal.draw(|f| {
+
             let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints([
+                Constraint::Percentage(90),
+                Constraint::Percentage(10)
+                ].as_ref()
+                )
+                .split(f.size());
+
+            let horizontal_chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .margin(1)
                 .constraints(
                     [
-                    Constraint::Percentage(30),
-                    Constraint::Percentage(90),
-                    Constraint::Percentage(90)
+                    Constraint::Percentage(20),
+                    Constraint::Percentage(70)
                     ].as_ref()
                     )
-                .split(f.size());
+                .split(chunks[0]);
 
             let block = Block::default()
                 .title("Collections")
                 .borders(Borders::ALL);
-            f.render_widget(block, chunks[0]);
+            f.render_widget(block, horizontal_chunks[0]);
 
             let block = Block::default()
                 .title("Edit Request")
                 .borders(Borders::ALL);
-            f.render_widget(block, chunks[1]);
+            f.render_widget(block, horizontal_chunks[1]);
 
             //input chunk (block ? I don't know)
             
             let chunks2 = Layout::default()
-                .direction(Direction::Horizontal)
+                .direction(Direction::Vertical)
                 .margin(1)
                 .constraints(
                     [
-                    Constraint::Percentage(30),
-                    Constraint::Percentage(90),
-                    Constraint::Percentage(90)
+                    Constraint::Percentage(100),
                     ].as_ref()
                     )
-                .split(f.size());
+                .split(chunks[1]);
 
             let input = Paragraph::new(app.input.as_ref())
                 .style(match app.input_mode {
@@ -112,7 +120,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputMode::Editing => Style::default().fg(Color::Yellow),
                 })
                 .block(Block::default().borders(Borders::ALL).title("Input"));
-            f.render_widget(input, chunks[2]);
+            f.render_widget(input, chunks2[0]);
 
             //Move cursor to the bottom of the page.
             match app.input_mode {

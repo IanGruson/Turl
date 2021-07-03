@@ -16,9 +16,31 @@ enum Methods {
     MODIFY,
 }
 
+pub struct Workspace<'a> {
+
+    name : &'a str,
+    collections : Vec<Collection>, 
+}
+
 pub struct Collection {
-    name : String,
+    name : &'static str,
     queries : Vec<HttpQuery>,
+}
+
+pub trait Container<'a> {
+
+    fn new(name : &'a str) -> Self;
+    fn name(&self) -> &'a str;
+}
+
+impl <'a>Container<'a> for Workspace<'a> {
+    fn new(name : &'a str) -> Workspace {
+        Workspace {name : name, collections : vec![]}
+    }
+
+    fn name(&self) -> &'a str {
+        self.name
+    }
 }
 
 pub struct HttpQuery {
@@ -101,4 +123,28 @@ pub fn create_collection(
     cursor.next()?;
     Ok(())
 
+}
+
+/// Fetches all workspaces from a user's id. 
+///
+/// Returns a Vec of Workspaces Struct wrapped in sqlite's Result.
+pub fn get_all_workspaces(
+    user_id : i32,
+    db : &Database) -> Result<Vec<Workspace>> {
+
+    let mut workspaces : Vec<Workspace> = vec![]; 
+    let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE user_id = :user_id")
+        .unwrap()
+        .into_cursor();
+
+    cursor.bind_by_name(vec![(":user_id", Value::Integer(user_id.into()))])?;
+    while let Some(row) = cursor.next().unwrap() {
+        let workspace = Workspace {
+            name : row[0].as_string().unwrap(),
+            collections : vec![],
+        };
+        workspaces.push(workspace);
+    }
+
+    Ok(workspaces)
 }
