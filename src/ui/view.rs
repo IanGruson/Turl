@@ -4,11 +4,11 @@ use tui::{
 
 use crate::database::{container};
 
-fn container_to_span<T>(
+pub fn container_to_span<T>(
     container : Vec<T>,
     ) -> Vec<Span<'static>> 
 where
-T : container::Container<'static>
+T : container::Container
 {
 
     let mut spans_vec = vec![];

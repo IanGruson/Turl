@@ -2,6 +2,7 @@ use std::{error::Error, io};
 
 mod util;
 mod database;
+mod ui;
 
 use util::event::{Event, Events};
 use util::dbhandler::Database;
@@ -18,6 +19,7 @@ use tui::{
 use unicode_width::UnicodeWidthStr;
 
 use database::container;
+use ui::view;
 
 enum InputMode {
     Normal,
@@ -65,8 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         //terminal.autoresize or not it seems to resize automatically anyway.
         //So this is probably not needed.
         terminal.autoresize()?;
-
-
+        
         //render UI
         terminal.draw(|f| {
 
@@ -90,6 +91,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     ].as_ref()
                     )
                 .split(chunks[0]);
+
+            let workspaces = container::get_all_workspaces(1, db).unwrap();
+            let spans = view::container_to_span(workspaces);
+
+            // for _i in spans.iter() {
+                    
+            // }
+
 
             let block = Block::default()
                 .title("Collections")

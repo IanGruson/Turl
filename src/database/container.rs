@@ -39,7 +39,7 @@ impl Container for Workspace {
     }
 
     fn name(&self) -> String {
-        self.name
+        self.name.clone()
     }
 }
 
