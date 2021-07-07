@@ -133,7 +133,7 @@ pub fn get_all_workspaces(
     db : &Database) -> Result<Vec<Workspace>> {
 
     let mut workspaces : Vec<Workspace> = vec![]; 
-    let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE user_id = :user_id")
+    let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE id_user = :user_id")
         .unwrap()
         .into_cursor();
 
