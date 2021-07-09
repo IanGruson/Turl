@@ -133,16 +133,21 @@ pub fn get_all_workspaces(
     db : &Database) -> Result<Vec<Workspace>> {
 
     let mut workspaces : Vec<Workspace> = vec![]; 
-    let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE id_user = :user_id")
+    // let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE id_user = :user_id")
+    //     .unwrap()
+    //     .into_cursor();
+    let mut cursor = db.connection.prepare("SELECT * FROM Workspace w
+                                           INNER JOIN User_Workspace uw ON uw.id_workspace = w.id")
         .unwrap()
         .into_cursor();
 
     cursor.bind_by_name(vec![(":user_id", Value::Integer(user_id.into()))])?;
     while let Some(row) = cursor.next().unwrap() {
         let workspace = Workspace {
-            name : row[0].as_string().unwrap().to_owned(),
+            name : row[1].as_string().unwrap().to_owned(),
             collections : vec![],
         };
+        println!("workspace name = {}", workspace.name);
         workspaces.push(workspace);
     }
 

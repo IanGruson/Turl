@@ -11,8 +11,8 @@ use termion::clear::*;
 use tui::{
     Terminal,
     backend::TermionBackend,
-    widgets::{Widget, Block, Borders, Paragraph},
-    layout::{Layout, Constraint, Direction, Rect},
+    widgets::{Widget, Block, Borders, Paragraph, Wrap},
+    layout::{Layout, Constraint, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
 };
 
@@ -61,6 +61,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
     terminal.clear()?;
+
+    let workspaces = container::get_all_workspaces(1, db).unwrap();
+    let spans = &view::container_to_spans(workspaces);
     loop {
 
         
@@ -92,18 +95,19 @@ fn main() -> Result<(), Box<dyn Error>> {
                     )
                 .split(chunks[0]);
 
-            let workspaces = container::get_all_workspaces(1, db).unwrap();
-            let spans = view::container_to_span(workspaces);
-
-            // for _i in spans.iter() {
-                    
-            // }
-
-
             let block = Block::default()
                 .title("Collections")
                 .borders(Borders::ALL);
             f.render_widget(block, horizontal_chunks[0]);
+
+            // renders a list of Workspaces in the left block
+            let custom_list = Paragraph::new(spans.clone())
+                .block(Block::default().title("Paragraph").borders(Borders::ALL))
+                .style(Style::default().fg(Color::White).bg(Color::Black))
+                .alignment(Alignment::Center)
+                .wrap(Wrap { trim: true });
+            f.render_widget(custom_list, horizontal_chunks[0]);
+
 
             let block = Block::default()
                 .title("Edit Request")
@@ -111,7 +115,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(block, horizontal_chunks[1]);
 
             //input chunk (block ? I don't know)
-            
+
             let chunks2 = Layout::default()
                 .direction(Direction::Vertical)
                 .margin(1)
@@ -128,7 +132,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputMode::Command => Style::default(),
                     InputMode::Editing => Style::default().fg(Color::Yellow),
                 })
-                .block(Block::default().borders(Borders::ALL).title("Input"));
+            .block(Block::default().borders(Borders::ALL).title("Input"));
             f.render_widget(input, chunks2[0]);
 
             //Move cursor to the bottom of the page.
@@ -144,11 +148,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                         )
                 }
                 InputMode::Editing => {}
-            
-        };
+
+            };
 
         })?;
-        
+
         //call of the input event handler
         if let Event::Input(input) = events.next()? {
             match app.input_mode {
@@ -190,7 +194,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Editing => {},
-                    
+
             }
         }
     }
