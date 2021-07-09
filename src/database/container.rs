@@ -147,7 +147,6 @@ pub fn get_all_workspaces(
             name : row[1].as_string().unwrap().to_owned(),
             collections : vec![],
         };
-        println!("workspace name = {}", workspace.name);
         workspaces.push(workspace);
     }
 

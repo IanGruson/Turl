@@ -104,10 +104,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             let custom_list = Paragraph::new(spans.clone())
                 .block(Block::default().title("Paragraph").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White).bg(Color::Black))
-                .alignment(Alignment::Center)
+                .alignment(Alignment::Left)
                 .wrap(Wrap { trim: true });
             f.render_widget(custom_list, horizontal_chunks[0]);
-
 
             let block = Block::default()
                 .title("Edit Request")
