@@ -57,13 +57,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let user = &database::user::get_user(1, db).unwrap().unwrap();
-    println!("the user id is : {}", user.id);
+    // println!("the user id is : {}", user.id);
 
 
     terminal.clear()?;
 
     let workspaces = container::get_all_workspaces(1, db).unwrap();
-    let spans = &view::container_to_spans(workspaces);
+    let workspace_spans = &view::container_to_spans(workspaces);
+
+    let collections = container::get_all_collections(1, db).unwrap();
+    let collection_spans = &view::container_to_spans(collections);
     loop {
 
         
@@ -101,10 +104,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(block, horizontal_chunks[0]);
 
             // renders a list of Workspaces in the left block
-            let custom_list = Paragraph::new(spans.clone())
+            let custom_list = Paragraph::new(workspace_spans.clone())
                 .block(Block::default().title("Paragraph").borders(Borders::ALL))
-                .style(Style::default().fg(Color::White).bg(Color::Black))
-                .alignment(Alignment::Center)
+                .style(Style::default().fg(Color::White))
+                .alignment(Alignment::Left)
                 .wrap(Wrap { trim: true });
             f.render_widget(custom_list, horizontal_chunks[0]);
 

@@ -43,6 +43,17 @@ impl Container for Workspace {
     }
 }
 
+impl Container for Collection {
+    fn new(name : String) -> Collection {
+        Collection {name : name, queries : vec![]}
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+}
+    
+
 pub struct HttpQuery {
     method : Methods,
     url : String,
@@ -129,27 +140,50 @@ pub fn create_collection(
 ///
 /// Returns a Vec of Workspaces Struct wrapped in sqlite's Result.
 pub fn get_all_workspaces(
-    user_id : i32,
+    id_user : i32,
     db : &Database) -> Result<Vec<Workspace>> {
 
     let mut workspaces : Vec<Workspace> = vec![]; 
-    // let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE id_user = :user_id")
-    //     .unwrap()
-    //     .into_cursor();
     let mut cursor = db.connection.prepare("SELECT * FROM Workspace w
-                                           INNER JOIN User_Workspace uw ON uw.id_workspace = w.id")
+                                           INNER JOIN User_Workspace uw ON uw.id_workspace = w.id
+                                           AND uw.id_user = :id_user")
         .unwrap()
         .into_cursor();
 
-    cursor.bind_by_name(vec![(":user_id", Value::Integer(user_id.into()))])?;
+    cursor.bind_by_name(vec![(":id_user", Value::Integer(id_user.into()))])?;
     while let Some(row) = cursor.next().unwrap() {
         let workspace = Workspace {
             name : row[1].as_string().unwrap().to_owned(),
             collections : vec![],
         };
-        println!("workspace name = {}", workspace.name);
         workspaces.push(workspace);
     }
 
     Ok(workspaces)
+}
+
+/// Fetches all Collections from a Workspace id
+///
+///Returns a Vec of Collections 
+pub fn get_all_collections(
+    id_workspace : i32,
+    db : &Database) -> Result<Vec<Collection>> {
+
+    let mut collections : Vec<Collection> = vec![];
+
+    let mut cursor = db.connection.prepare("SELECT * FROM Collection 
+                                           WHERE id_workspace = :id_workspace")
+        .unwrap()
+        .into_cursor();
+    cursor.bind_by_name(vec![(":id_workspace", Value::Integer(id_workspace.into()))])?;
+
+    while let Some(row) = cursor.next().unwrap() {
+        let collection = Collection {
+            name : row[1].as_string().unwrap().to_owned(),
+            queries : vec![],
+        };
+        collections.push(collection);
+    }
+
+    Ok(collections)
 }

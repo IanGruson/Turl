@@ -12,9 +12,7 @@ T : container::Container
 {
 
     let mut spans_vec = vec![];
-    println!("Converting to spans");
     for item in container.iter() {
-        println!("workspace name = {}" , item.name());
         spans_vec.push(Spans::from(Span::raw(item.name())));
 
     }
