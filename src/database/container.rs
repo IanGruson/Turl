@@ -4,11 +4,6 @@ use sqlite::*;
 use curl::easy::Easy;
 use super::user::*;
 
-pub trait Migration {
-    fn add(&self) -> Result<()>;
-    fn remove(&self) -> Result<()>; 
-}
-
 enum Methods {
     GET,
     POST,
@@ -52,7 +47,6 @@ impl Container for Collection {
         self.name.clone()
     }
 }
-    
 
 pub struct HttpQuery {
     method : Methods,
