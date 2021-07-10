@@ -124,8 +124,6 @@ pub fn create_collection(
     db : &Database) -> Result<()> { 
 
     println!("creating new collection");
-    //This methods works and is not vulnerable to SQL injections because of the vec! I think.
-    //Also doesn't work without a cursor and I don't get why.
     let mut statement = db.connection.prepare("INSERT INTO Collection(name, id_workspace) VALUES (:name, :id_workspace);")?;
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
@@ -135,6 +133,35 @@ pub fn create_collection(
     Ok(())
 
 }
+
+/// Creates a new HTTP Request for a Collection.
+/// 
+/// params : 
+///
+/// name - the name of the request. 
+/// id_collection - the collection the request will be attached to. 
+/// method - the HTTP method (GET, POST ...).
+/// url - the url of the request. 
+/// db - a database object.
+pub fn create_request(
+    name : String,
+    id_collection : i32,
+    method : String,
+    url : String,
+    db : &Database) -> Result<()> {
+
+    println!("Creating new Request");
+    let mut statement = db.connection.prepare("INSERT INTO Request(name, id_collection, method, url) VALUES (:name, :id_collection, :method, :url);")?;
+    let mut cursor = statement.into_cursor();
+    cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
+    (":id_collection", Value::Integer(id_collection.into())),
+    (":method", Value::String(method.into())),
+    (":url", Value::String(url.into()))
+    ])?;
+    cursor.next()?;
+    Ok(())
+}
+
 
 /// Fetches all workspaces from a user's id. 
 ///
@@ -184,6 +211,5 @@ pub fn get_all_collections(
         };
         collections.push(collection);
     }
-
     Ok(collections)
 }

@@ -18,7 +18,7 @@ use tui::{
 
 use unicode_width::UnicodeWidthStr;
 
-use database::container;
+use database::container::*;
 use ui::view;
 
 enum InputMode {
@@ -57,18 +57,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let user = &database::user::get_user(1, db).unwrap().unwrap();
+
+    let collection = Collection::new(String::from("collection_test"));
     // println!("the user id is : {}", user.id);
 
 
     terminal.clear()?;
 
-    let workspaces = container::get_all_workspaces(1, db).unwrap();
+    let workspaces = get_all_workspaces(1, db).unwrap();
     let workspace_spans = &view::container_to_spans(workspaces);
 
-    let collections = container::get_all_collections(1, db).unwrap();
+    let collections =get_all_collections(1, db).unwrap();
     let collection_spans = &view::container_to_spans(collections);
     loop {
-
         
         //terminal.autoresize or not it seems to resize automatically anyway.
         //So this is probably not needed.
@@ -98,14 +99,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     )
                 .split(chunks[0]);
 
-            let block = Block::default()
-                .title("Collections")
-                .borders(Borders::ALL);
-            f.render_widget(block, horizontal_chunks[0]);
+            // let block = Block::default()
+            //     .title("Collections")
+            //     .borders(Borders::ALL);
+            // f.render_widget(block, horizontal_chunks[0]);
 
             // renders a list of Workspaces in the left block
             let custom_list = Paragraph::new(workspace_spans.clone())
-                .block(Block::default().title("Paragraph").borders(Borders::ALL))
+                .block(Block::default().title("Collections").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
                 .alignment(Alignment::Left)
                 .wrap(Wrap { trim: true });
@@ -164,10 +165,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
                     Key::Char('w') => {
-                        container::create_workspace(user, "test", db)?;
+                        create_workspace(user, "test", db)?;
+                    }
+                    Key::Char('r') => {
+                        create_request(collection.name(), 1, String::from("GET"), String::from("http://localhost"),db)?;
                     }
                     Key::Char('i') => {
-                        container::create_collection(String::from("test"), 1, db)?;
+                        create_collection(String::from("test"), 1, db)?;
                     }
                     Key::Char(':') => {
                         // println!("You pressed the : key");
@@ -180,6 +184,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Command => match input {
+                    // Enter key press
                     Key::Char('\n') => {
                         app.input.drain(..);
                     }
