@@ -4,11 +4,6 @@ use sqlite::*;
 use curl::easy::Easy;
 use super::user::*;
 
-pub trait Migration {
-    fn add(&self) -> Result<()>;
-    fn remove(&self) -> Result<()>; 
-}
-
 enum Methods {
     GET,
     POST,
@@ -36,6 +31,16 @@ pub trait Container {
 impl Container for Workspace {
     fn new(name : String) -> Workspace {
         Workspace {name : name, collections : vec![]}
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+}
+
+impl Container for Collection {
+    fn new(name : String) -> Collection {
+        Collection {name : name, queries : vec![]}
     }
 
     fn name(&self) -> String {
@@ -113,8 +118,6 @@ pub fn create_collection(
     db : &Database) -> Result<()> { 
 
     println!("creating new collection");
-    //This methods works and is not vulnerable to SQL injections because of the vec! I think.
-    //Also doesn't work without a cursor and I don't get why.
     let mut statement = db.connection.prepare("INSERT INTO Collection(name, id_workspace) VALUES (:name, :id_workspace);")?;
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
@@ -125,23 +128,50 @@ pub fn create_collection(
 
 }
 
+/// Creates a new HTTP Request for a Collection.
+/// 
+/// params : 
+///
+/// name - the name of the request. 
+/// id_collection - the collection the request will be attached to. 
+/// method - the HTTP method (GET, POST ...).
+/// url - the url of the request. 
+/// db - a database object.
+pub fn create_request(
+    name : String,
+    id_collection : i32,
+    method : String,
+    url : String,
+    db : &Database) -> Result<()> {
+
+    println!("Creating new Request");
+    let mut statement = db.connection.prepare("INSERT INTO Request(name, id_collection, method, url) VALUES (:name, :id_collection, :method, :url);")?;
+    let mut cursor = statement.into_cursor();
+    cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
+    (":id_collection", Value::Integer(id_collection.into())),
+    (":method", Value::String(method.into())),
+    (":url", Value::String(url.into()))
+    ])?;
+    cursor.next()?;
+    Ok(())
+}
+
+
 /// Fetches all workspaces from a user's id. 
 ///
 /// Returns a Vec of Workspaces Struct wrapped in sqlite's Result.
 pub fn get_all_workspaces(
-    user_id : i32,
+    id_user : i32,
     db : &Database) -> Result<Vec<Workspace>> {
 
     let mut workspaces : Vec<Workspace> = vec![]; 
-    // let mut cursor = db.connection.prepare("SELECT * FROM Workspace WHERE id_user = :user_id")
-    //     .unwrap()
-    //     .into_cursor();
     let mut cursor = db.connection.prepare("SELECT * FROM Workspace w
-                                           INNER JOIN User_Workspace uw ON uw.id_workspace = w.id")
+                                           INNER JOIN User_Workspace uw ON uw.id_workspace = w.id
+                                           AND uw.id_user = :id_user")
         .unwrap()
         .into_cursor();
 
-    cursor.bind_by_name(vec![(":user_id", Value::Integer(user_id.into()))])?;
+    cursor.bind_by_name(vec![(":id_user", Value::Integer(id_user.into()))])?;
     while let Some(row) = cursor.next().unwrap() {
         let workspace = Workspace {
             name : row[1].as_string().unwrap().to_owned(),
@@ -151,4 +181,29 @@ pub fn get_all_workspaces(
     }
 
     Ok(workspaces)
+}
+
+/// Fetches all Collections from a Workspace id
+///
+///Returns a Vec of Collections 
+pub fn get_all_collections(
+    id_workspace : i32,
+    db : &Database) -> Result<Vec<Collection>> {
+
+    let mut collections : Vec<Collection> = vec![];
+
+    let mut cursor = db.connection.prepare("SELECT * FROM Collection 
+                                           WHERE id_workspace = :id_workspace")
+        .unwrap()
+        .into_cursor();
+    cursor.bind_by_name(vec![(":id_workspace", Value::Integer(id_workspace.into()))])?;
+
+    while let Some(row) = cursor.next().unwrap() {
+        let collection = Collection {
+            name : row[1].as_string().unwrap().to_owned(),
+            queries : vec![],
+        };
+        collections.push(collection);
+    }
+    Ok(collections)
 }
