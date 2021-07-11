@@ -13,24 +13,26 @@ enum Methods {
 
 pub struct Workspace {
 
-    name : String,
+    pub id : i32,
+    pub name : String,
     collections : Vec<Collection>, 
 }
 
 pub struct Collection {
+    id : i32,
     name : String,
     queries : Vec<HttpQuery>,
 }
 
 pub trait Container {
 
-    fn new(name : String) -> Self;
+    fn new(id :i32, name : String) -> Self;
     fn name(&self) -> String;
 }
 
 impl Container for Workspace {
-    fn new(name : String) -> Workspace {
-        Workspace {name : name, collections : vec![]}
+    fn new(id : i32, name : String) -> Workspace {
+        Workspace {id : id, name : name, collections : vec![]}
     }
 
     fn name(&self) -> String {
@@ -39,8 +41,8 @@ impl Container for Workspace {
 }
 
 impl Container for Collection {
-    fn new(name : String) -> Collection {
-        Collection {name : name, queries : vec![]}
+    fn new(id :i32, name : String) -> Collection {
+        Collection {id : id, name : name, queries : vec![]}
     }
 
     fn name(&self) -> String {
@@ -113,7 +115,7 @@ pub fn create_workspace(
 /// workspace_id : the workspace id this collection will be attached to.
 /// db - a database object.
 pub fn create_collection(
-    name : String,
+    name : &str,
     workspace_id : i32,
     db : &Database) -> Result<()> { 
 
@@ -174,6 +176,7 @@ pub fn get_all_workspaces(
     cursor.bind_by_name(vec![(":id_user", Value::Integer(id_user.into()))])?;
     while let Some(row) = cursor.next().unwrap() {
         let workspace = Workspace {
+            id : row[0].as_integer().unwrap().to_owned() as i32,
             name : row[1].as_string().unwrap().to_owned(),
             collections : vec![],
         };
@@ -200,6 +203,7 @@ pub fn get_all_collections(
 
     while let Some(row) = cursor.next().unwrap() {
         let collection = Collection {
+            id : row[0].as_integer().unwrap().to_owned() as i32,
             name : row[1].as_string().unwrap().to_owned(),
             queries : vec![],
         };

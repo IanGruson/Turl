@@ -58,10 +58,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         connection : sqlite::open("./.database").unwrap(),
     };
 
+    // This is here for tests mainly. 
     let user = &database::user::get_user(1, db).unwrap().unwrap();
-
-    let collection = Collection::new(String::from("collection_test"));
-    // println!("the user id is : {}", user.id);
+    let collection = Collection::new(1, String::from("collection_test"));
+    let workspace = Workspace::new(1, String::from("workspace"));
 
 
     terminal.clear()?;
@@ -172,7 +172,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         create_request(collection.name(), 1, String::from("GET"), String::from("http://localhost"),db)?;
                     }
                     Key::Char('i') => {
-                        create_collection(String::from("test"), 1, db)?;
+                        create_collection("test", 1, db)?;
                     }
                     Key::Char(':') => {
                         // println!("You pressed the : key");
@@ -188,8 +188,36 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // Enter key press
                     Key::Char('\n') => {
                         let v : Vec<&str> = app.input.split_whitespace().collect();
-                        if let Some((name, args)) = v.split_first() {
-                            command_line::interpret_command(name, args.to_vec())?;
+                        if let Some((&name, args)) = v.split_first() {
+                            match name {
+                                "add" => {
+                                    for (i, &arg) in args.iter().enumerate() {
+                                        match arg {
+                                            "workspace" => {
+
+                                                let workspace_name = args[i+1];
+                                                create_workspace(user, workspace_name, db)?;
+
+                                            }
+
+                                            "collection" => {
+
+                                                let collection_name = args[i+1];
+                                                create_collection(collection_name, workspace.id, db)?;
+
+                                            }
+
+                                            &_ => ()
+                                        }
+                                    }
+
+                                },
+                                "rm" => {
+
+                                },
+                                &_ => println!("command {} not found", name)
+
+                            }
                         }
                         app.input.drain(..);
                         app.input_mode = InputMode::Normal;
