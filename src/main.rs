@@ -3,6 +3,7 @@ use std::{error::Error, io};
 mod util;
 mod database;
 mod ui;
+mod command;
 
 use util::event::{Event, Events};
 use util::dbhandler::Database;
@@ -20,6 +21,7 @@ use unicode_width::UnicodeWidthStr;
 
 use database::container::*;
 use ui::view;
+use command::command as command_line;
 
 enum InputMode {
     Normal,
@@ -185,7 +187,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Command => match input {
                     // Enter key press
                     Key::Char('\n') => {
+                        let v : Vec<&str> = app.input.split_whitespace().collect();
+                        if let Some((name, args)) = v.split_first() {
+                            command_line::interpret_command(name, args.to_vec())?;
+                        }
                         app.input.drain(..);
+                        app.input_mode = InputMode::Normal;
                     }
                     Key::Char(c) => {
 
