@@ -3,7 +3,6 @@ use std::{error::Error, io};
 mod util;
 mod database;
 mod ui;
-mod command;
 
 use util::event::{Event, Events};
 use util::dbhandler::Database;
@@ -21,7 +20,6 @@ use unicode_width::UnicodeWidthStr;
 
 use database::container::*;
 use ui::view;
-use command::command as command_line;
 
 enum InputMode {
     Normal,
@@ -197,7 +195,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                                                 let workspace_name = args[i+1];
                                                 create_workspace(user, workspace_name, db)?;
-
                                             }
 
                                             "collection" => {
