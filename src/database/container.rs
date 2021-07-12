@@ -13,25 +13,25 @@ enum Methods {
 
 pub struct Workspace {
 
-    pub id : i32,
+    pub id : i64,
     pub name : String,
-    collections : Vec<Collection>, 
+    pub collections : Vec<Collection>, 
 }
 
 pub struct Collection {
-    id : i32,
-    name : String,
-    queries : Vec<HttpQuery>,
+    pub id : i64,
+    pub name : String,
+    pub queries : Vec<HttpQuery>,
 }
 
 pub trait Container {
 
-    fn new(id :i32, name : String) -> Self;
+    fn new(id :i64, name : String) -> Self;
     fn name(&self) -> String;
 }
 
 impl Container for Workspace {
-    fn new(id : i32, name : String) -> Workspace {
+    fn new(id : i64, name : String) -> Workspace {
         Workspace {id : id, name : name, collections : vec![]}
     }
 
@@ -41,7 +41,7 @@ impl Container for Workspace {
 }
 
 impl Container for Collection {
-    fn new(id :i32, name : String) -> Collection {
+    fn new(id :i64, name : String) -> Collection {
         Collection {id : id, name : name, queries : vec![]}
     }
 
@@ -116,7 +116,7 @@ pub fn create_workspace(
 /// db - a database object.
 pub fn create_collection(
     name : &str,
-    workspace_id : i32,
+    workspace_id : i64,
     db : &Database) -> Result<()> { 
 
     println!("creating new collection");
@@ -141,7 +141,7 @@ pub fn create_collection(
 /// db - a database object.
 pub fn create_request(
     name : String,
-    id_collection : i32,
+    id_collection : i64,
     method : String,
     url : String,
     db : &Database) -> Result<()> {
@@ -163,7 +163,7 @@ pub fn create_request(
 ///
 /// Returns a Vec of Workspaces Struct wrapped in sqlite's Result.
 pub fn get_all_workspaces(
-    id_user : i32,
+    id_user : i64,
     db : &Database) -> Result<Vec<Workspace>> {
 
     let mut workspaces : Vec<Workspace> = vec![]; 
@@ -176,7 +176,7 @@ pub fn get_all_workspaces(
     cursor.bind_by_name(vec![(":id_user", Value::Integer(id_user.into()))])?;
     while let Some(row) = cursor.next().unwrap() {
         let workspace = Workspace {
-            id : row[0].as_integer().unwrap().to_owned() as i32,
+            id : row[0].as_integer().unwrap().to_owned(),
             name : row[1].as_string().unwrap().to_owned(),
             collections : vec![],
         };
@@ -190,7 +190,7 @@ pub fn get_all_workspaces(
 ///
 ///Returns a Vec of Collections 
 pub fn get_all_collections(
-    id_workspace : i32,
+    id_workspace : i64,
     db : &Database) -> Result<Vec<Collection>> {
 
     let mut collections : Vec<Collection> = vec![];
@@ -203,7 +203,7 @@ pub fn get_all_collections(
 
     while let Some(row) = cursor.next().unwrap() {
         let collection = Collection {
-            id : row[0].as_integer().unwrap().to_owned() as i32,
+            id : row[0].as_integer().unwrap().to_owned(),
             name : row[1].as_string().unwrap().to_owned(),
             queries : vec![],
         };

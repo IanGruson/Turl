@@ -182,6 +182,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                     _ => {}
                 },
+
+                // Command line to add/delete stuff in the database
                 InputMode::Command => match input {
                     // Enter key press
                     Key::Char('\n') => {
