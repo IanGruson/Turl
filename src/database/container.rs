@@ -140,10 +140,10 @@ pub fn create_collection(
 /// url - the url of the request. 
 /// db - a database object.
 pub fn create_request(
-    name : String,
+    name : &str,
     id_collection : i64,
-    method : String,
-    url : String,
+    method : &str,
+    url : &str,
     db : &Database) -> Result<()> {
 
     println!("Creating new Request");
@@ -156,6 +156,24 @@ pub fn create_request(
     ])?;
     cursor.next()?;
     Ok(())
+}
+
+/// Delete a workspace from it's name.
+///
+/// * `name` - &str of the workspace to delete.
+/// * `db` - Database to work on.
+pub fn delete_workspace(
+    name : &str,
+    db : &Database,) -> Result<()> {
+
+    let mut statement = db.connection.prepare("DELETE FROM Workspace WHERE name = :name;")?;
+    let mut cursor = statement.into_cursor();
+    cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
+    (":name", Value::String(name.into()))
+    ])?;
+    cursor.next()?;
+    Ok(())
+
 }
 
 

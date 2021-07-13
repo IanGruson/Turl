@@ -168,7 +168,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         create_workspace(user, "test", db)?;
                     }
                     Key::Char('r') => {
-                        create_request(collection.name(), 1, String::from("GET"), String::from("http://localhost"),db)?;
+                        // create_request(collection.name(), 1, String::from("GET"), String::from("http://localhost"),db)?;
                     }
                     Key::Char('i') => {
                         create_collection("test", 1, db)?;
@@ -196,16 +196,25 @@ fn main() -> Result<(), Box<dyn Error>> {
                                         match arg {
                                             "workspace" => {
 
-                                                let workspace_name = args[i+1];
-                                                create_workspace(user, workspace_name, db)?;
+                                                let name = args[i+1];
+                                                create_workspace(user, name, db)?;
                                             }
 
                                             "collection" => {
 
-                                                let collection_name = args[i+1];
-                                                let id_work = args[i+2].parse()?;
-                                                create_collection(collection_name, id_work, db)?;
+                                                let name = args[i+1];
+                                                let id = args[i+2].parse()?;
+                                                create_collection(name, id, db)?;
 
+                                            }
+
+                                            "request" => {
+
+                                                let name = args[i+1];
+                                                let id = args[i+2].parse()?;
+                                                let method = args[i+3];
+                                                let url = args[i+4];
+                                                create_request(name, id, method, url,db)?;
                                             }
 
                                             &_ => ()
@@ -214,7 +223,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                                 },
                                 "rm" => {
+                                    for (i, &arg) in args.iter().enumerate() {
+                                        match arg {
+                                            "workspace" => {
+                                                //TODO delete workspace
+                                                let name = args[i+1];
+                                                delete_workspace(name, db)?;
+                                            }
 
+                                            "collection" => {
+
+                                                //TODO delete collection
+
+                                            }
+
+                                            "request" => {
+
+                                                //TODO delete request 
+                                            }
+
+                                            &_ => ()
+                                        }
+                                    }
                                 },
                                 &_ => println!("command {} not found", name)
 
