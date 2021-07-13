@@ -226,20 +226,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                                     for (i, &arg) in args.iter().enumerate() {
                                         match arg {
                                             "workspace" => {
-                                                //TODO delete workspace
                                                 let name = args[i+1];
                                                 delete_workspace(name, db)?;
                                             }
 
                                             "collection" => {
-
-                                                //TODO delete collection
+                                                let name = args[i+1];
+                                                delete_collection(name, db)?;
 
                                             }
 
                                             "request" => {
+                                                let name = args[i+1];
+                                                delete_request(name, db)?;
 
-                                                //TODO delete request 
                                             }
 
                                             &_ => ()

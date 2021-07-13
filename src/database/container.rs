@@ -166,7 +166,54 @@ pub fn delete_workspace(
     name : &str,
     db : &Database,) -> Result<()> {
 
-    let mut statement = db.connection.prepare("DELETE FROM Workspace WHERE name = :name;")?;
+    let mut statement = db.connection.prepare("DELETE FROM User_Workspace 
+                                              WHERE id_workspace IN (
+                                                  SELECT id_workspace FROM User_Workspace uw
+                                                  INNER JOIN Workspace w ON w.id = uw.id_workspace
+                                                  WHERE w.name = :name)")?;
+    let mut cursor = statement.into_cursor();
+    cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
+    (":name", Value::String(name.into()))
+    ])?;
+    cursor.next()?;
+
+    statement = db.connection.prepare("DELETE FROM Workspace WHERE name = :name;")?;
+    cursor = statement.into_cursor();
+    cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
+    (":name", Value::String(name.into()))
+    ])?;
+    cursor.next()?;
+    Ok(())
+
+}
+
+/// Delete a collection from it's name.
+///
+/// * `name` - &str of the collection to delete.
+/// * `db` - Database to work on.
+pub fn delete_collection(
+    name : &str,
+    db : &Database,) -> Result<()> {
+
+    let mut statement = db.connection.prepare("DELETE FROM Collection WHERE name = :name;")?;
+    let mut cursor = statement.into_cursor();
+    cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
+    (":name", Value::String(name.into()))
+    ])?;
+    cursor.next()?;
+    Ok(())
+
+}
+
+/// Delete a collection from it's name.
+///
+/// * `name` - &str of the collection to delete.
+/// * `db` - Database to work on.
+pub fn delete_request(
+    name : &str,
+    db : &Database,) -> Result<()> {
+
+    let mut statement = db.connection.prepare("DELETE FROM Request WHERE name = :name;")?;
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
     (":name", Value::String(name.into()))
