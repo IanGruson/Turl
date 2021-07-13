@@ -64,11 +64,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     terminal.clear()?;
 
-    let workspaces = get_all_workspaces(1, db).unwrap();
-    let workspace_spans = &view::container_to_spans(workspaces);
-
-    let collections =get_all_collections(1, db).unwrap();
-    let collection_spans = &view::container_to_spans(collections);
     loop {
         
         //terminal.autoresize or not it seems to resize automatically anyway.
@@ -98,6 +93,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     ].as_ref()
                     )
                 .split(chunks[0]);
+
+            let workspaces = get_all_workspaces(1, db).unwrap();
+            let workspace_spans = &view::container_to_spans(workspaces);
+
+            let collections =get_all_collections(1, db).unwrap();
+            let collection_spans = &view::container_to_spans(collections);
 
             // let block = Block::default()
             //     .title("Collections")
@@ -202,7 +203,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                             "collection" => {
 
                                                 let collection_name = args[i+1];
-                                                create_collection(collection_name, workspace.id, db)?;
+                                                let id_work = args[i+2].parse()?;
+                                                create_collection(collection_name, id_work, db)?;
 
                                             }
 
