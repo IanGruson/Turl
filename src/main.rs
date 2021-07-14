@@ -11,9 +11,10 @@ use termion::clear::*;
 use tui::{
     Terminal,
     backend::TermionBackend,
-    widgets::{Widget, Block, Borders, Paragraph, Wrap},
+    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs},
     layout::{Layout, Constraint, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
+    symbols::DOT,
 };
 
 use unicode_width::UnicodeWidthStr;
@@ -77,11 +78,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints([
-                Constraint::Percentage(90),
-                Constraint::Percentage(10)
+                Constraint::Percentage(10),
+                Constraint::Percentage(80),
+                Constraint::Percentage(10),
                 ].as_ref()
                 )
                 .split(f.size());
+
+            let workspaces = get_all_workspaces(1, db).unwrap();
+            let workspace_spans = view::container_to_spans(workspaces);
+
+            // tabs for Workspaces
+            let tabs = Tabs::new(workspace_spans)
+                    .block(Block::default().title("Workspaces").borders(Borders::ALL))
+                    .highlight_style(Style::default().fg(Color::Black).bg(Color::White))
+                    .divider(DOT);
+            f.render_widget(tabs, chunks[0]);
 
             let horizontal_chunks = Layout::default()
                 .direction(Direction::Horizontal)
@@ -92,21 +104,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Constraint::Percentage(70)
                     ].as_ref()
                     )
-                .split(chunks[0]);
+                .split(chunks[1]);
 
-            let workspaces = get_all_workspaces(1, db).unwrap();
-            let workspace_spans = &view::container_to_spans(workspaces);
 
             let collections =get_all_collections(1, db).unwrap();
             let collection_spans = &view::container_to_spans(collections);
 
-            // let block = Block::default()
-            //     .title("Collections")
-            //     .borders(Borders::ALL);
-            // f.render_widget(block, horizontal_chunks[0]);
-
-            // renders a list of Workspaces in the left block
-            let custom_list = Paragraph::new(workspace_spans.clone())
+            // renders a list of Collections in the left block
+            let custom_list = Paragraph::new(collection_spans.clone())
                 .block(Block::default().title("Collections").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
                 .alignment(Alignment::Left)
@@ -120,7 +125,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             //input chunk (block ? I don't know)
 
-            let chunks2 = Layout::default()
+            let input_chunk = Layout::default()
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints(
@@ -128,7 +133,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Constraint::Percentage(100),
                     ].as_ref()
                     )
-                .split(chunks[1]);
+                .split(chunks[2]);
 
             let input = Paragraph::new(app.input.as_ref())
                 .style(match app.input_mode {
@@ -137,7 +142,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputMode::Editing => Style::default().fg(Color::Yellow),
                 })
             .block(Block::default().borders(Borders::ALL).title("Input"));
-            f.render_widget(input, chunks2[0]);
+            f.render_widget(input, input_chunk[0]);
 
             //Move cursor to the bottom of the page.
             match app.input_mode {
@@ -146,9 +151,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     f.set_cursor(
                         // Place the cursor at the end of the input as you are 
                         // typing.
-                        chunks2[0].x + app.input.width() as u16 +1,
+                        input_chunk[0].x + app.input.width() as u16 +1,
                         // Move one line down to leave a border.
-                        chunks2[0].y + 1, 
+                        input_chunk[0].y + 1, 
                         )
                 }
                 InputMode::Editing => {}
