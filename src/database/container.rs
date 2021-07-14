@@ -66,7 +66,6 @@ pub fn create_workspace(
     name : &str,
     db : &Database) -> Result<()> {
 
-    println!("creating new workspace");
     //This methods works and is not vulnerable to SQL injections because of the vec! I think.
     //Also doesn't work without a cursor and I don't get why.
     let mut statement = db.connection.prepare("INSERT INTO Workspace(name) VALUES (:name);").unwrap();
@@ -83,7 +82,6 @@ pub fn create_workspace(
         Some(row) => {
             //get the id of the last created Workspace.
             let workspace_id = row[0].as_integer().unwrap();
-            println!("the created workspace id is : {}", workspace_id);
 
             // Join table insert statement
             statement = db.connection.prepare("INSERT INTO User_Workspace(id_user, id_workspace) VALUES (:id_user, :id_workspace);")?;
@@ -119,7 +117,6 @@ pub fn create_collection(
     workspace_id : i64,
     db : &Database) -> Result<()> { 
 
-    println!("creating new collection");
     let mut statement = db.connection.prepare("INSERT INTO Collection(name, id_workspace) VALUES (:name, :id_workspace);")?;
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
@@ -146,7 +143,6 @@ pub fn create_request(
     url : &str,
     db : &Database) -> Result<()> {
 
-    println!("Creating new Request");
     let mut statement = db.connection.prepare("INSERT INTO Request(name, id_collection, method, url) VALUES (:name, :id_collection, :method, :url);")?;
     let mut cursor = statement.into_cursor();
     cursor.bind_by_name(vec![(":name", Value::String(name.to_owned())),
