@@ -31,6 +31,7 @@ enum InputMode {
 struct App {
     input : String,
     input_mode : InputMode,
+    selected_tab : usize,
 }
 
 impl Default for App {
@@ -38,6 +39,7 @@ impl Default for App {
         App {
             input : String::new(),
             input_mode : InputMode::Normal,
+            selected_tab : 0,
         }
     }
 
@@ -92,6 +94,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let tabs = Tabs::new(workspace_spans)
                     .block(Block::default().title("Workspaces").borders(Borders::ALL))
                     .highlight_style(Style::default().fg(Color::Black).bg(Color::White))
+                    .select(app.selected_tab)
                     .divider(DOT);
             f.render_widget(tabs, chunks[0]);
 
@@ -107,7 +110,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .split(chunks[1]);
 
 
-            let collections =get_all_collections(1, db).unwrap();
+            // Show the collections corresponding to the workspace. 
+            let collections =get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
             let collection_spans = &view::container_to_spans(collections);
 
             // renders a list of Collections in the left block
@@ -179,10 +183,25 @@ fn main() -> Result<(), Box<dyn Error>> {
                         create_collection("test", 1, db)?;
                     }
                     Key::Char(':') => {
-                        // println!("You pressed the : key");
                         app.input_mode = InputMode::Command;
-
                     }
+                    
+
+                    // ---- Workspaces -----
+                    Key::Char('1') => {
+                        // Go to workspace 1
+                        app.selected_tab = 0;
+                    }
+                    Key::Char('2') => {
+                        // Go to workspace 2
+                        app.selected_tab = 1;
+                    }
+                    Key::Char('3') => {
+                        // Go to workspace 2
+                        app.selected_tab = 2;
+                    }
+
+                    // Quit the application
                     Key::Char('q') => {
                         break;
                     }
