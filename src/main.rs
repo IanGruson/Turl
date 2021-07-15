@@ -127,6 +127,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .borders(Borders::ALL);
             f.render_widget(block, horizontal_chunks[1]);
 
+            let request_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints(
+                    [
+                    Constraint::Percentage(50),
+                    Constraint::Percentage(50),
+                    ])
+                .split(horizontal_chunks[1]);
+
+            let block = Block::default()
+                .title("Response")
+                .borders(Borders::TOP);
+            f.render_widget(block, request_chunks[1]);
+
             //input chunk (block ? I don't know)
 
             let input_chunk = Layout::default()
