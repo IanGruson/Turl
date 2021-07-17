@@ -11,7 +11,7 @@ use termion::clear::*;
 use tui::{
     Terminal,
     backend::TermionBackend,
-    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs, List},
+    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs, List, ListState},
     layout::{Layout, Constraint, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
     symbols::DOT,
@@ -33,7 +33,7 @@ struct App {
     input : String,
     input_mode : InputMode,
     selected_tab : usize,
-    selected_collection : usize,
+    col_state : ListState,
 }
 
 impl Default for App {
@@ -42,7 +42,7 @@ impl Default for App {
             input : String::new(),
             input_mode : InputMode::Normal,
             selected_tab : 0,
-            selected_collection : 0,
+            col_state : ListState::default(),
         }
     }
 
@@ -74,7 +74,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         
         //terminal.autoresize or not it seems to resize automatically anyway.
         //So this is probably not needed.
-        terminal.autoresize()?;
         
         //render UI
         terminal.draw(|f| {
@@ -117,17 +116,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             let collections =get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
             let collection_items = view::container_to_ListItem(collections);
 
-            // renders a list of Collections in the left block
-            // TODO Not sure about the span part. I should be using a List widget
-            // but it doesn't take a Vec it seems. 
+            // Render the collections of a workspace in a Widget::List
             let custom_list = List::new(collection_items)
                 .block(Block::default().title("Collections").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                 .highlight_symbol(">>");
-                f.render_widget(custom_list, horizontal_chunks[0]);
+                f.render_stateful_widget(custom_list, horizontal_chunks[0],&mut app.col_state);
 
             // render request method and name.
-            let request = Request::new(app.selected_collection as i64, Methods::GET, String::from("http://meedos.xyz"), 80);
+            let request = Request::new(app.col_state.selected().unwrap() as i64, Methods::GET, String::from("http://meedos.xyz"), 80);
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
