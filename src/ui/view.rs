@@ -1,4 +1,5 @@
 use tui::{
+    widgets::{ListItem},
     text::{Span, Spans, Text},
 };
 
@@ -18,4 +19,20 @@ T : container::Container
     }
 
     spans_vec
+}
+
+pub fn container_to_ListItem<T>(
+    container : Vec<T>,
+    ) -> Vec<ListItem<'static>> 
+where
+T : container::Container
+{
+
+    let mut list_items = vec![];
+    for item in container.iter() {
+        list_items.push(ListItem::new(item.name()));
+
+    }
+
+    list_items
 }

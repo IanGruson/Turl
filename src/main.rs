@@ -11,7 +11,7 @@ use termion::clear::*;
 use tui::{
     Terminal,
     backend::TermionBackend,
-    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs},
+    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs, List},
     layout::{Layout, Constraint, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
     symbols::DOT,
@@ -115,17 +115,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             // Show the collections corresponding to the workspace. 
             let collections =get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
-            let collection_spans = &view::container_to_spans(collections);
+            let collection_items = view::container_to_ListItem(collections);
 
             // renders a list of Collections in the left block
             // TODO Not sure about the span part. I should be using a List widget
             // but it doesn't take a Vec it seems. 
-            let custom_list = Paragraph::new(collection_spans.clone())
+            let custom_list = List::new(collection_items)
                 .block(Block::default().title("Collections").borders(Borders::ALL))
-                .style(Style::default().fg(Color::White))
-                .alignment(Alignment::Left)
-                .wrap(Wrap { trim: true });
-            f.render_widget(custom_list, horizontal_chunks[0]);
+                .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+                .highlight_symbol(">>");
+                f.render_widget(custom_list, horizontal_chunks[0]);
 
             // render request method and name.
             let request = Request::new(app.selected_collection as i64, Methods::GET, String::from("http://meedos.xyz"), 80);
