@@ -1,14 +1,25 @@
 use crate::util::dbhandler::*;
 
+use std::fmt;
+
 use sqlite::*;
 use curl::easy::Easy;
 use super::user::*;
 
-enum Methods {
+#[derive(Debug)]
+pub enum Methods {
     GET,
     POST,
     DELETE,
     MODIFY,
+}
+
+// Convert enum to String
+impl fmt::Display for Methods {
+
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub struct Workspace {
@@ -21,7 +32,7 @@ pub struct Workspace {
 pub struct Collection {
     pub id : i64,
     pub name : String,
-    pub queries : Vec<HttpQuery>,
+    pub queries : Vec<Request>,
 }
 
 pub trait Container {
@@ -50,10 +61,20 @@ impl Container for Collection {
     }
 }
 
-pub struct HttpQuery {
-    method : Methods,
-    url : String,
-    port : String,
+pub struct Request {
+    id : i64,
+    pub method : Methods,
+    pub url : String,
+    pub port : i32,
+
+}
+
+impl Request {
+
+    pub fn new(id : i64, method : Methods, url : String, port : i32) -> Request {
+        Request { id : id, method : method, url : url, port : port}
+    }
+
 }
 
 /// Creates a Workspace in the database.

@@ -15,6 +15,7 @@ use tui::{
     layout::{Layout, Constraint, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
     symbols::DOT,
+    text::{Span, Spans},
 };
 
 use unicode_width::UnicodeWidthStr;
@@ -32,6 +33,7 @@ struct App {
     input : String,
     input_mode : InputMode,
     selected_tab : usize,
+    selected_collection : usize,
 }
 
 impl Default for App {
@@ -40,6 +42,7 @@ impl Default for App {
             input : String::new(),
             input_mode : InputMode::Normal,
             selected_tab : 0,
+            selected_collection : 0,
         }
     }
 
@@ -115,6 +118,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             let collection_spans = &view::container_to_spans(collections);
 
             // renders a list of Collections in the left block
+            // TODO Not sure about the span part. I should be using a List widget
+            // but it doesn't take a Vec it seems. 
             let custom_list = Paragraph::new(collection_spans.clone())
                 .block(Block::default().title("Collections").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
@@ -122,18 +127,29 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .wrap(Wrap { trim: true });
             f.render_widget(custom_list, horizontal_chunks[0]);
 
-            let block = Block::default()
+            // render request method and name.
+            let request = Request::new(app.selected_collection as i64, Methods::GET, String::from("http://meedos.xyz"), 80);
+
+            let request_paragraph = Paragraph::new(vec![
+                                                   Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
+                                                   Span::styled("   ", Style::default()),
+                                                   Span::styled(request.url, Style::default()),
+                                                   Span::styled("   ", Style::default()),
+                                                   Span::styled("port : ".to_string() + &request.port.to_string(), Style::default()),
+                                                   ]),
+            ])
+                .block(Block::default()
                 .title("Edit Request")
-                .borders(Borders::ALL);
-            f.render_widget(block, horizontal_chunks[1]);
+                .borders(Borders::ALL));
+            f.render_widget(request_paragraph, horizontal_chunks[1]);
 
             let request_chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints(
                     [
-                    Constraint::Percentage(50),
-                    Constraint::Percentage(50),
+                    Constraint::Percentage(20),
+                    Constraint::Percentage(80),
                     ])
                 .split(horizontal_chunks[1]);
 
