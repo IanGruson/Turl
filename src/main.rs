@@ -29,11 +29,19 @@ enum InputMode {
     Editing,
 }
 
+enum SelectionMode {
+
+    Collections,
+    Requests,
+}
+
 struct App<'a> {
     input : String,
     input_mode : InputMode,
+    selection_mode : SelectionMode,
     selected_tab : usize,
     col_state : ListState,
+    req_state : ListState,
     collection_list :  Vec<ListItem<'a>>,
 }
 
@@ -42,8 +50,10 @@ impl<'a> Default for App<'a> {
         App {
             input : String::new(),
             input_mode : InputMode::Normal,
+            selection_mode : SelectionMode::Collections,
             selected_tab : 0,
             col_state : ListState::default(),
+            req_state : ListState::default(),
             collection_list : Vec::new(),
         }
     }
@@ -60,6 +70,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let events = Events::new();
 
     app.col_state.select(Some(0));
+    app.req_state.select(Some(0));
 
     let db = &Database {
         filename : String::from("./.database"),
@@ -68,8 +79,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // This is here for tests mainly. 
     let user = &database::user::get_user(1, db).unwrap().unwrap();
-    let collection = Collection::new(1, String::from("collection_test"));
-    let workspace = Workspace::new(1, String::from("workspace"));
 
 
     terminal.clear()?;
@@ -117,7 +126,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .split(chunks[1]);
 
 
-            // Show the collections corresponding to the workspace. 
+            // fetch the collections corresponding to the workspace. 
             let collections =get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
             let collection_items = view::container_to_ListItem(collections);
             app.collection_list = collection_items.clone();
@@ -215,6 +224,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('i') => {
                         create_collection("test", 1, db)?;
                     }
+                    Key::Char(' ') => {
+                        match app.selection_mode {
+                            SelectionMode::Collections => {
+                                app.selection_mode = SelectionMode::Requests;
+                            }
+                            SelectionMode::Requests => {
+                                app.selection_mode = SelectionMode::Collections;
+                            }
+                        }
+                    
+                    }
                     Key::Char(':') => {
                         app.input_mode = InputMode::Command;
                     }
@@ -239,7 +259,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         let i = app.col_state.selected().unwrap();
                         if i == 0 {
                             app.col_state.select(Some(app.collection_list.len() - 1));
-
                         }
                         else {
                             app.col_state.select(Some(i -1));
@@ -249,12 +268,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                         let i = app.col_state.selected().unwrap();
                         if i >= app.collection_list.len() - 1 {
                             app.col_state.select(Some(0));
-
                         }
                         else {
                             app.col_state.select(Some(i +1));
                         }
-
                     }
 
                     // Quit the application
