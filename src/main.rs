@@ -11,7 +11,7 @@ use termion::clear::*;
 use tui::{
     Terminal,
     backend::TermionBackend,
-    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs, List, ListState},
+    widgets::{Widget, Block, Borders, Paragraph, Wrap, Tabs, List, ListState, ListItem},
     layout::{Layout, Constraint, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
     symbols::DOT,
@@ -29,20 +29,22 @@ enum InputMode {
     Editing,
 }
 
-struct App {
+struct App<'a> {
     input : String,
     input_mode : InputMode,
     selected_tab : usize,
     col_state : ListState,
+    collection_list :  Vec<ListItem<'a>>,
 }
 
-impl Default for App {
-    fn default() -> App {
+impl<'a> Default for App<'a> {
+    fn default() -> App<'a> {
         App {
             input : String::new(),
             input_mode : InputMode::Normal,
             selected_tab : 0,
             col_state : ListState::default(),
+            collection_list : Vec::new(),
         }
     }
 
@@ -56,6 +58,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::default();
     
     let events = Events::new();
+
+    app.col_state.select(Some(0));
 
     let db = &Database {
         filename : String::from("./.database"),
@@ -74,6 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         
         //terminal.autoresize or not it seems to resize automatically anyway.
         //So this is probably not needed.
+        terminal.autoresize()?;
         
         //render UI
         terminal.draw(|f| {
@@ -105,8 +110,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .margin(1)
                 .constraints(
                     [
-                    Constraint::Percentage(20),
-                    Constraint::Percentage(70)
+                    Constraint::Percentage(10),
+                    Constraint::Percentage(90)
                     ].as_ref()
                     )
                 .split(chunks[1]);
@@ -115,16 +120,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             // Show the collections corresponding to the workspace. 
             let collections =get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
             let collection_items = view::container_to_ListItem(collections);
+            app.collection_list = collection_items.clone();
 
             // Render the collections of a workspace in a Widget::List
-            let custom_list = List::new(collection_items)
+            let collection_list = List::new(app.collection_list.clone())
                 .block(Block::default().title("Collections").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                 .highlight_symbol(">>");
-                f.render_stateful_widget(custom_list, horizontal_chunks[0],&mut app.col_state);
+                f.render_stateful_widget(collection_list, horizontal_chunks[0],&mut app.col_state);
 
             // render request method and name.
-            let request = Request::new(app.col_state.selected().unwrap() as i64, Methods::GET, String::from("http://meedos.xyz"), 80);
+            let request = Request::new(1, Methods::GET, String::from("http://meedos.xyz"), 80);
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
@@ -226,6 +232,29 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('3') => {
                         // Go to workspace 2
                         app.selected_tab = 2;
+                    }
+
+                    // ----- Collections ----
+                    Key::Char('k') => {
+                        let i = app.col_state.selected().unwrap();
+                        if i == 0 {
+                            app.col_state.select(Some(app.collection_list.len() - 1));
+
+                        }
+                        else {
+                            app.col_state.select(Some(i -1));
+                        }
+                    }
+                    Key::Char('j') => {
+                        let i = app.col_state.selected().unwrap();
+                        if i >= app.collection_list.len() - 1 {
+                            app.col_state.select(Some(0));
+
+                        }
+                        else {
+                            app.col_state.select(Some(i +1));
+                        }
+
                     }
 
                     // Quit the application
