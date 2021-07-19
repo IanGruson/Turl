@@ -139,14 +139,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 f.render_stateful_widget(collection_list, horizontal_chunks[0],&mut app.col_state);
 
             // render request method and name.
-            let request = Request::new(1, Methods::GET, String::from("http://meedos.xyz"), 80);
+            // let request = Request::new(1, "lol", Methods::GET, String::from("http://meedos.xyz"), 80);
+            let request = get_request(1, db).unwrap();
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
                                                    Span::styled("   ", Style::default()),
                                                    Span::styled(request.url, Style::default()),
-                                                   Span::styled("   ", Style::default()),
-                                                   Span::styled("port : ".to_string() + &request.port.to_string(), Style::default()),
                                                    ]),
             ])
                 .block(Block::default()

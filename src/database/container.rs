@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use crate::util::dbhandler::*;
 
 use std::fmt;
@@ -6,12 +7,27 @@ use sqlite::*;
 use curl::easy::Easy;
 use super::user::*;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Methods {
     GET,
     POST,
     DELETE,
     MODIFY,
+    PUT,
+}
+
+impl FromStr for Methods {
+    type Err = ();
+    fn from_str(input : &str) -> std::result::Result<Methods, Self::Err> {
+        match input {
+            "GET" => Ok(Methods::GET),
+            "POST" => Ok(Methods::POST),
+            "DELETE" => Ok(Methods::DELETE),
+            "MODIFY" => Ok(Methods::MODIFY),
+            "PUT" => Ok(Methods::PUT),
+            _      => Err(()),
+        }
+    }
 }
 
 // Convert enum to String
@@ -63,16 +79,27 @@ impl Container for Collection {
 
 pub struct Request {
     id : i64,
+    pub name : String,
     pub method : Methods,
     pub url : String,
-    pub port : i32,
-
+    pub params : String,
+    pub body : String,
 }
 
 impl Request {
 
-    pub fn new(id : i64, method : Methods, url : String, port : i32) -> Request {
-        Request { id : id, method : method, url : url, port : port}
+    pub fn new(id : i64,
+               name : String,
+               method : Methods,
+               url : String,
+               params : String,
+               body : String) -> Request {
+        Request { id : id,
+        name : name ,
+        method : method,
+        url : url,
+        params : params,
+        body : body}
     }
 
 }
@@ -116,7 +143,7 @@ pub fn create_workspace(
             code : Some(1),
             message : Some(String::from("Something went wrong, User_Workspace entry not created.")),
         })
-        
+
     }
 
 
@@ -270,6 +297,8 @@ pub fn get_all_workspaces(
 
 /// Fetches all Collections from a Workspace id
 ///
+/// * `id_workspace` - a i64 id to the corresponding workspace
+/// * `db` - Database to work on.
 ///Returns a Vec of Collections 
 pub fn get_all_collections(
     id_workspace : i64,
@@ -292,4 +321,73 @@ pub fn get_all_collections(
         collections.push(collection);
     }
     Ok(collections)
+}
+
+/// Fetches a request from it's id 
+///
+/// * `id` - the i64 id of the request
+/// * `db` - Database to work on.
+pub fn get_request(
+    id : i64,
+    db : &Database) -> Result<Request> {
+    let mut cursor = db.connection.prepare("SELECT * FROM Request 
+                                           WHERE id = :id")
+        .unwrap()
+        .into_cursor();
+    cursor.bind_by_name(vec![(":id", Value::Integer(id.into()))])?;
+
+
+    match cursor.next().unwrap() {
+        Some(row) => {
+
+            let request = Request {
+
+                id : row[0].as_integer().unwrap().to_owned(),
+                name : row[1].as_string().unwrap().to_owned(),
+                method : Methods::from_str(row[2].as_string().unwrap()).unwrap(),
+                url : row[3].as_string().unwrap().to_owned(),
+                params : row[4].as_string().unwrap_or_default().to_owned(),
+                body : row[5].as_string().unwrap_or_default().to_owned(),
+            };
+            Ok(request)
+        }
+        None => Err(Error { 
+            code : Some(1),
+            message : Some(String::from("Something went wrong")),
+        })
+    }
+
+
+}
+
+
+/// Fetches all Requests from a Workspace id
+///
+/// * `id_collection` - a i64 id to the corresponding workspace
+/// * `db` - Database to work on.
+///Returns a Vec of Requests 
+pub fn get_all_requests(
+    id_collection : i64,
+    db : &Database) -> Result<Vec<Request>> {
+
+    let mut requests : Vec<Request> = vec![];
+
+    let mut cursor = db.connection.prepare("SELECT * FROM Request 
+                                           WHERE id_collection = :id_collection")
+        .unwrap()
+        .into_cursor();
+    cursor.bind_by_name(vec![(":id_collection", Value::Integer(id_collection.into()))])?;
+
+    while let Some(row) = cursor.next().unwrap() {
+        let request = Request {
+            id : row[0].as_integer().unwrap().to_owned(),
+            name : row[1].as_string().unwrap().to_owned(),
+            method : Methods::from_str(row[2].as_string().unwrap()).unwrap(),
+            url : row[3].as_string().unwrap().to_owned(),
+            params : row[4].as_string().unwrap_or_default().to_owned(),
+            body : row[5].as_string().unwrap_or_default().to_owned(),
+        };
+        requests.push(request);
+    }
+    Ok(requests)
 }
