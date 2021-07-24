@@ -68,13 +68,25 @@ impl Container for Workspace {
 }
 
 impl Container for Collection {
-    fn new(id :i64, name : String) -> Collection {
-        Collection {id : id, name : name, queries : vec![]}
+    fn new(id :i64, name : String) -> Self {
+        Self {id : id, name : name, queries : vec![]}
     }
 
     fn name(&self) -> String {
         self.name.clone()
     }
+}
+
+pub trait Protocol {
+    fn new(id : i64,
+               name : String,
+               method : Methods,
+               url : String,
+               params : String,
+               body : String) -> Request; 
+
+    fn name(&self) -> String;
+
 }
 
 pub struct Request {
@@ -86,9 +98,9 @@ pub struct Request {
     pub body : String,
 }
 
-impl Request {
+impl Protocol for Request {
 
-    pub fn new(id : i64,
+    fn new(id : i64,
                name : String,
                method : Methods,
                url : String,
@@ -100,6 +112,10 @@ impl Request {
         url : url,
         params : params,
         body : body}
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
     }
 
 }

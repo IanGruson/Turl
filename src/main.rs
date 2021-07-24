@@ -43,6 +43,7 @@ struct App<'a> {
     col_state : ListState,
     req_state : ListState,
     collection_list :  Vec<ListItem<'a>>,
+    request_list :  Vec<ListItem<'a>>,
 }
 
 impl<'a> Default for App<'a> {
@@ -55,6 +56,7 @@ impl<'a> Default for App<'a> {
             col_state : ListState::default(),
             req_state : ListState::default(),
             collection_list : Vec::new(),
+            request_list : Vec::new(),
         }
     }
 
@@ -66,7 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut app = App::default();
-    
+
     let events = Events::new();
 
     app.col_state.select(Some(0));
@@ -84,11 +86,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     terminal.clear()?;
 
     loop {
-        
+
         //terminal.autoresize or not it seems to resize automatically anyway.
         //So this is probably not needed.
         terminal.autoresize()?;
-        
+
         //render UI
         terminal.draw(|f| {
 
@@ -96,9 +98,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints([
-                Constraint::Percentage(10),
-                Constraint::Percentage(80),
-                Constraint::Percentage(10),
+                             Constraint::Percentage(10),
+                             Constraint::Percentage(80),
+                             Constraint::Percentage(10),
                 ].as_ref()
                 )
                 .split(f.size());
@@ -108,10 +110,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             // tabs for Workspaces
             let tabs = Tabs::new(workspace_spans)
-                    .block(Block::default().title("Workspaces").borders(Borders::ALL))
-                    .highlight_style(Style::default().fg(Color::Black).bg(Color::White))
-                    .select(app.selected_tab)
-                    .divider(DOT);
+                .block(Block::default().title("Workspaces").borders(Borders::ALL))
+                .highlight_style(Style::default().fg(Color::Black).bg(Color::White))
+                .select(app.selected_tab)
+                .divider(DOT);
             f.render_widget(tabs, chunks[0]);
 
             let horizontal_chunks = Layout::default()
@@ -126,8 +128,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .split(chunks[1]);
 
 
+            let left_bar_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(
+                    [
+                    Constraint::Percentage(50),
+                    Constraint::Percentage(50),
+                    ].as_ref()
+                    )
+                .split(horizontal_chunks[0]);
             // fetch the collections corresponding to the workspace. 
-            let collections =get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
+            let collections = get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
             let collection_items = view::container_to_ListItem(collections);
             app.collection_list = collection_items.clone();
 
@@ -136,10 +147,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .block(Block::default().title("Collections").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                 .highlight_symbol(">>");
-                f.render_stateful_widget(collection_list, horizontal_chunks[0],&mut app.col_state);
+            f.render_stateful_widget(collection_list, left_bar_chunks[0],&mut app.col_state);
+
+            // println!("coll selected = {}", app.col_state.selected().unwrap());
+            let requests = get_all_requests(app.col_state.selected().unwrap() as i64 + 1 , db).unwrap();
+            
+            let request_items = view::request_to_ListItem(requests);
+            app.request_list = request_items.clone();
+            let request_list = List::new(app.request_list.clone())
+                .block(Block::default().title("Requests").borders(Borders::ALL))
+                .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+                .highlight_symbol(">>");
+            f.render_stateful_widget(request_list, left_bar_chunks[1],&mut app.col_state);
 
             // render request method and name.
-            // let request = Request::new(1, "lol", Methods::GET, String::from("http://meedos.xyz"), 80);
             let request = get_request(1, db).unwrap();
 
             let request_paragraph = Paragraph::new(vec![
@@ -214,6 +235,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Normal => match input {
 
 
+                    //TODO 
+                    //Get rid of this
                     Key::Char('w') => {
                         create_workspace(user, "test", db)?;
                     }

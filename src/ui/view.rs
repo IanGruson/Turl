@@ -25,11 +25,28 @@ pub fn container_to_ListItem<T>(
     container : Vec<T>,
     ) -> Vec<ListItem<'static>> 
 where
-T : container::Container
+T : container::Container,
 {
 
     let mut list_items = vec![];
     for item in container.iter() {
+        list_items.push(ListItem::new(item.name()));
+
+    }
+
+    list_items
+}
+
+
+pub fn request_to_ListItem<T>(
+    request : Vec<T>,
+    ) -> Vec<ListItem<'static>> 
+where 
+T : container::Protocol,
+{
+
+    let mut list_items = vec![];
+    for item in request.iter() {
         list_items.push(ListItem::new(item.name()));
 
     }
