@@ -149,8 +149,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .highlight_symbol(">>");
             f.render_stateful_widget(collection_list, left_bar_chunks[0],&mut app.col_state);
 
-            // println!("coll selected = {}", app.col_state.selected().unwrap());
-            let requests = get_all_requests(app.col_state.selected().unwrap() as i64 + 1 , db).unwrap();
+            let collections_for_id = get_all_collections(app.selected_tab as i64 + 1, db).unwrap();
+            let id_selected_col = collections_for_id[app.col_state.selected().unwrap()].id;
+            
+            //fetch all requests
+            //TODO fix the id when getting all requests. 
+            // let requests = get_all_requests(app.col_state.selected().unwrap() as i64 + 1 , db).unwrap();
+            let requests = get_all_requests(id_selected_col, db).unwrap();
             
             let request_items = view::request_to_ListItem(requests);
             app.request_list = request_items.clone();

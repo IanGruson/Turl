@@ -38,6 +38,7 @@ impl fmt::Display for Methods {
     }
 }
 
+// #[derive(Clone)]
 pub struct Workspace {
 
     pub id : i64,
