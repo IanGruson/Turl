@@ -163,10 +163,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .block(Block::default().title("Requests").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                 .highlight_symbol(">>");
-            f.render_stateful_widget(request_list, left_bar_chunks[1],&mut app.col_state);
+            f.render_stateful_widget(request_list, left_bar_chunks[1],&mut app.req_state);
 
             // render request method and name.
-            let request = get_request(1, db).unwrap();
+            let request = get_request(app.req_state.selected().unwrap() as i64 + 1 , db).unwrap();
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
@@ -275,32 +275,61 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('2') => {
                         // Go to workspace 2
                         app.selected_tab = 1;
+                        // reset selected req to 0
+                        //TODO this is not correct. Needs to be the first request from the
+                        //appropriate collection
+                        app.req_state.select(Some(0));
                     }
                     Key::Char('3') => {
                         // Go to workspace 2
                         app.selected_tab = 2;
                     }
 
-                    // ----- Collections ----
+                    // ----- Collections & Requests ----
                     Key::Char('k') => {
-                        let i = app.col_state.selected().unwrap();
-                        if i == 0 {
-                            app.col_state.select(Some(app.collection_list.len() - 1));
-                        }
-                        else {
-                            app.col_state.select(Some(i -1));
+                        match app.selection_mode {
+                            SelectionMode::Requests => {
+                                let i = app.req_state.selected().unwrap();
+                                if i == 0 {
+                                    app.req_state.select(Some(app.request_list.len() - 1));
+                                }
+                                else {
+                                    app.req_state.select(Some(i -1));
+                                }
+                            }
+                            SelectionMode::Collections => {
+                                let i = app.col_state.selected().unwrap();
+                                if i == 0 {
+                                    app.col_state.select(Some(app.collection_list.len() - 1));
+                                }
+                                else {
+                                    app.col_state.select(Some(i -1));
+                                }
+                            }
                         }
                     }
                     Key::Char('j') => {
-                        let i = app.col_state.selected().unwrap();
-                        if i >= app.collection_list.len() - 1 {
-                            app.col_state.select(Some(0));
-                        }
-                        else {
-                            app.col_state.select(Some(i +1));
+                        match app.selection_mode {
+                            SelectionMode::Requests => {
+                                let i = app.req_state.selected().unwrap();
+                                if i >= app.request_list.len() - 1 {
+                                    app.req_state.select(Some(0));
+                                }
+                                else {
+                                    app.req_state.select(Some(i +1));
+                                }
+                            }
+                            SelectionMode::Collections => {
+                                let i = app.col_state.selected().unwrap();
+                                if i >= app.collection_list.len() - 1 {
+                                    app.col_state.select(Some(0));
+                                }
+                                else {
+                                    app.col_state.select(Some(i +1));
+                                }
+                            }
                         }
                     }
-
                     // Quit the application
                     Key::Char('q') => {
                         break;
