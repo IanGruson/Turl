@@ -163,10 +163,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .block(Block::default().title("Requests").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                 .highlight_symbol(">>");
+
+            let requests_for_id = get_all_requests(id_selected_col, db).unwrap();
+            let id_sel_req = requests_for_id[app.req_state.selected().unwrap()].id;
             f.render_stateful_widget(request_list, left_bar_chunks[1],&mut app.req_state);
 
             // render request method and name.
-            let request = get_request(app.req_state.selected().unwrap() as i64 + 1 , db).unwrap();
+            let request = get_request(id_sel_req, db).unwrap();
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
@@ -278,7 +281,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         // reset selected req to 0
                         //TODO this is not correct. Needs to be the first request from the
                         //appropriate collection
-                        app.req_state.select(Some(0));
                     }
                     Key::Char('3') => {
                         // Go to workspace 2

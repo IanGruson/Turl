@@ -91,7 +91,7 @@ pub trait Protocol {
 }
 
 pub struct Request {
-    id : i64,
+    pub id : i64,
     pub name : String,
     pub method : Methods,
     pub url : String,
