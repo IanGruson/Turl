@@ -296,6 +296,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
 
                     Key::Right => {
+                        app.col_state.select(Some(0));
                         if app.selected_tab < app.tab_len -1 {
                             app.selected_tab += 1;
                         }
@@ -304,6 +305,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
                     Key::Left => {
+                        app.col_state.select(Some(0));
                         if app.selected_tab == 0 {
                             app.selected_tab = app.tab_len-1;
                         }
