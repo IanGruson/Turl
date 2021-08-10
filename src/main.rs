@@ -142,6 +142,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .split(horizontal_chunks[0]);
             // fetch the collections corresponding to the workspace. 
             let mut collections = get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
+            let mut collections_for_id = collections.clone();
             if collections.len() < 1 {
                 collections.push(Collection::new(0, String::from("Empty")));
             }
@@ -155,7 +156,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .highlight_symbol(">>");
             f.render_stateful_widget(collection_list, left_bar_chunks[0],&mut app.col_state);
 
-            let mut collections_for_id = get_all_collections(app.selected_tab as i64 + 1, db).unwrap();
+            // let mut collections_for_id = get_all_collections(app.selected_tab as i64 + 1, db).unwrap();
             if collections_for_id.len() < 1 {
                 collections_for_id.push(Collection::new(0, String::from("Empty")));
             }
@@ -163,11 +164,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             //fetch all requests
             //TODO fix the id when getting all requests. 
-            // let requests = get_all_requests(app.col_state.selected().unwrap() as i64 + 1 , db).unwrap();
             let requests = get_all_requests(id_selected_col, db).unwrap();
+            let mut r = requests.clone();
 
             let request_items = view::request_to_ListItem(requests);
-            app.request_list = request_items.clone();
+            app.request_list = request_items;
             let request_list = List::new(app.request_list.clone())
                 .block(Block::default().title("Requests").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
@@ -175,12 +176,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_stateful_widget(request_list, left_bar_chunks[1],&mut app.req_state);
 
             // render request method and name.
-            let request = get_request(app.req_state.selected().unwrap() as i64 + 1 , db).unwrap();
+            if r.len() < 1 {
+                r.push(Request::new(0,String::from("add Request"),Methods::GET,String::from("This collection is empty, add a request !"), String::from(" "), String::from(" ")));
+            }
+            let request = &r[app.req_state.selected().unwrap()];
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
                                                    Span::styled("   ", Style::default()),
-                                                   Span::styled(request.url, Style::default()),
+                                                   Span::styled(request.url.clone(), Style::default()),
                                                    ]),
             ])
                 .block(Block::default()

@@ -7,7 +7,7 @@ use sqlite::*;
 use curl::easy::Easy;
 use super::user::*;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Methods {
     GET,
     POST,
@@ -38,7 +38,7 @@ impl fmt::Display for Methods {
     }
 }
 
-// #[derive(Clone)]
+#[derive(Clone)]
 pub struct Workspace {
 
     pub id : i64,
@@ -46,6 +46,7 @@ pub struct Workspace {
     pub collections : Vec<Collection>, 
 }
 
+#[derive(Clone)]
 pub struct Collection {
     pub id : i64,
     pub name : String,
@@ -90,6 +91,7 @@ pub trait Protocol {
 
 }
 
+#[derive(Clone)]
 pub struct Request {
     pub id : i64,
     pub name : String,
