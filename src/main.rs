@@ -40,6 +40,7 @@ struct App<'a> {
     input_mode : InputMode,
     selection_mode : SelectionMode,
     selected_tab : usize,
+    tab_len : usize,
     col_state : ListState,
     req_state : ListState,
     collection_list :  Vec<ListItem<'a>>,
@@ -53,6 +54,7 @@ impl<'a> Default for App<'a> {
             input_mode : InputMode::Normal,
             selection_mode : SelectionMode::Collections,
             selected_tab : 0,
+            tab_len : 0,
             col_state : ListState::default(),
             req_state : ListState::default(),
             collection_list : Vec::new(),
@@ -106,6 +108,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .split(f.size());
 
             let workspaces = get_all_workspaces(1, db).unwrap();
+            app.tab_len = workspaces.len();
             let workspace_spans = view::container_to_spans(workspaces);
 
             // tabs for Workspaces
@@ -293,10 +296,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
 
                     Key::Right => {
-                        app.selected_tab += 1;
+                        if app.selected_tab < app.tab_len -1 {
+                            app.selected_tab += 1;
+                        }
+                        else {
+                            app.selected_tab = 0;
+                        }
                     }
                     Key::Left => {
-                        app.selected_tab -= 1;
+                        if app.selected_tab == 0 {
+                            app.selected_tab = app.tab_len-1;
+                        }
+                        else {
+                            app.selected_tab -= 1;
+                        }
                     }
 
                     // ----- Collections & Requests ----
