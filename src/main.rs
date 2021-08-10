@@ -138,7 +138,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     )
                 .split(horizontal_chunks[0]);
             // fetch the collections corresponding to the workspace. 
-            let collections = get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
+            let mut collections = get_all_collections(app.selected_tab as i64 + 1 , db).unwrap();
+            if collections.len() < 1 {
+                collections.push(Collection::new(0, String::from("Empty")));
+            }
             let collection_items = view::container_to_ListItem(collections);
             app.collection_list = collection_items.clone();
 
@@ -149,27 +152,27 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .highlight_symbol(">>");
             f.render_stateful_widget(collection_list, left_bar_chunks[0],&mut app.col_state);
 
-            let collections_for_id = get_all_collections(app.selected_tab as i64 + 1, db).unwrap();
+            let mut collections_for_id = get_all_collections(app.selected_tab as i64 + 1, db).unwrap();
+            if collections_for_id.len() < 1 {
+                collections_for_id.push(Collection::new(0, String::from("Empty")));
+            }
             let id_selected_col = collections_for_id[app.col_state.selected().unwrap()].id;
-            
+
             //fetch all requests
             //TODO fix the id when getting all requests. 
             // let requests = get_all_requests(app.col_state.selected().unwrap() as i64 + 1 , db).unwrap();
             let requests = get_all_requests(id_selected_col, db).unwrap();
-            
+
             let request_items = view::request_to_ListItem(requests);
             app.request_list = request_items.clone();
             let request_list = List::new(app.request_list.clone())
                 .block(Block::default().title("Requests").borders(Borders::ALL))
                 .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                 .highlight_symbol(">>");
-
-            let requests_for_id = get_all_requests(id_selected_col, db).unwrap();
-            let id_sel_req = requests_for_id[app.req_state.selected().unwrap()].id;
             f.render_stateful_widget(request_list, left_bar_chunks[1],&mut app.req_state);
 
             // render request method and name.
-            let request = get_request(id_sel_req, db).unwrap();
+            let request = get_request(app.req_state.selected().unwrap() as i64 + 1 , db).unwrap();
 
             let request_paragraph = Paragraph::new(vec![
                                                    Spans::from(vec![Span::styled(request.method.to_string(), Style::default().add_modifier(Modifier::ITALIC)),
@@ -178,8 +181,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                                    ]),
             ])
                 .block(Block::default()
-                .title("Edit Request")
-                .borders(Borders::ALL));
+                       .title("Edit Request")
+                       .borders(Borders::ALL));
             f.render_widget(request_paragraph, horizontal_chunks[1]);
 
             let request_chunks = Layout::default()
@@ -233,7 +236,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Editing => {}
 
             };
-
         })?;
 
         //call of the input event handler
@@ -254,6 +256,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('i') => {
                         create_collection("test", 1, db)?;
                     }
+                    //
+                    
                     Key::Char(' ') => {
                         match app.selection_mode {
                             SelectionMode::Collections => {
@@ -263,12 +267,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 app.selection_mode = SelectionMode::Collections;
                             }
                         }
-                    
+
                     }
                     Key::Char(':') => {
                         app.input_mode = InputMode::Command;
                     }
-                    
+
 
                     // ---- Workspaces -----
                     Key::Char('1') => {
@@ -278,13 +282,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('2') => {
                         // Go to workspace 2
                         app.selected_tab = 1;
-                        // reset selected req to 0
-                        //TODO this is not correct. Needs to be the first request from the
-                        //appropriate collection
                     }
                     Key::Char('3') => {
                         // Go to workspace 2
                         app.selected_tab = 2;
+                    }
+                    Key::Char('4') => {
+                        // Go to workspace 2
+                        app.selected_tab = 3;
+                    }
+
+                    Key::Right => {
+                        app.selected_tab += 1;
+                    }
+                    Key::Left => {
+                        app.selected_tab -= 1;
                     }
 
                     // ----- Collections & Requests ----
@@ -358,8 +370,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                             "collection" => {
 
                                                 let name = args[i+1];
-                                                let id = args[i+2].parse()?;
-                                                create_collection(name, id, db)?;
+                                                // let id = args[i+2].parse()?;
+                                                create_collection(name, app.selected_tab as i64 + 1, db)?;
 
                                             }
 
